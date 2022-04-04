@@ -35,7 +35,7 @@ db: List[User] = [
 	),
 ]
 
-def userExist(username: str):
+def usernameExist(username: str):
 	""" Check if the user exist
 
 	"""
@@ -46,6 +46,15 @@ def userExist(username: str):
 
 	return False
 
+def userExist(user: User):
+	if not usernameExist(user.username):
+		return False
+
+	for u in db:
+		if u.username == user.username and u.password == user.password:
+			return True
+
+	return False
 
 @app.get("/")
 async def root():
@@ -128,11 +137,11 @@ async def signup(user: UserSignupModel):
 		roles = roles
 	)
 
-	if userExist(username):
+	if usernameExist(username):
 		raise HTTPException(
 			status_code=404,
 			detail={
-				"error_messages":["username is already be taken"]
+				"error_message": "username is already be taken"
 			}
 			
 		)
