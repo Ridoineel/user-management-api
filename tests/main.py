@@ -23,21 +23,28 @@ def main():
 		"password": "ridi96"
 	}
 
-	signup_result = post("http://localhost:8000/api/v1/users/signup", 
+	signup_result = post("http://localhost:8000/users/signup", 
 					json_encode(signup_data))
-	signin_result = post("http://localhost:8000/api/v1/users/signin", 
+	signin_result = post("http://localhost:8000/users/signin", 
 					json_encode(signin_data))
-	
 
+	
 	print("Signup")
 	print(signup_result)
-	print(signup_result.text)
+	signup_result = json_decode(signup_result.text)
+	print(signup_result)
+
+	get_result = get("http://localhost:8000/users/%s" % json_decode(signin_result.text)["id"])
 
 	print()
 
 	print("Signin")
 	print(signin_result)
 	print(signin_result.text)
+
+	print()
+	print("Get user")
+	print(get_result.text)
 
 if __name__ == '__main__':
 	main()
