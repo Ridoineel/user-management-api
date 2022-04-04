@@ -159,9 +159,24 @@ async def signin(user: UserSigninModel):
 
 	"""
 
-	print(user)
+	username = user.username.strip().lower()
+	password = crypt(user.password)
 
-	return user
+	for u in db:
+		if (u.username == username) and (u.password == password):
+			# user exist
+
+			return {
+				"id": u.id,
+			}
+
+	# if user not exist
+	raise HTTPException(
+				status_code=404,
+				detail={
+					"error_message": "User not exist"
+				}
+			)
 
 @app.delete("/api/v1/users/{_id}")
 async def delete_user(_id: UUID):

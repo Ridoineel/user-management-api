@@ -19,14 +19,15 @@ def main():
 	}
 
 	signin_data = {
-		"username": "Ridoine", 
-		"password": "marks"
+		"username": "RidoineEl", 
+		"password": "ridi96"
 	}
 
-	# signin_result = post("http://localhost:8000/api/v1/users/signin", 
-	# 				json_encode(signin_data))
 	signup_result = post("http://localhost:8000/api/v1/users/signup", 
 					json_encode(signup_data))
+	signin_result = post("http://localhost:8000/api/v1/users/signin", 
+					json_encode(signin_data))
+	
 
 	print("Signup")
 	print(signup_result)
@@ -34,9 +35,9 @@ def main():
 
 	print()
 
-	# print("Signin")
-	# print(signin_result)
-	# print(signin_result.text)
+	print("Signin")
+	print(signin_result)
+	print(signin_result.text)
 
 if __name__ == '__main__':
 	main()
