@@ -35,15 +35,13 @@ db: List[User] = [
 	),
 ]
 
-def userExist(user: User):
+def userExist(username: str):
 	""" Check if the user exist
 
 	"""
 
-	username = user.username
-
-	for u in db:
-		if u.username == username:
+	for user in db:
+		if user.username == username:
 			return True
 
 	return False
@@ -130,7 +128,7 @@ async def signup(user: UserSignupModel):
 		roles = roles
 	)
 
-	if userExist(user):
+	if userExist(username):
 		raise HTTPException(
 			status_code=404,
 			detail={
