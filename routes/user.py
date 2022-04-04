@@ -3,10 +3,7 @@ from fastapi import HTTPException
 from typing import List
 from uuid import uuid4
 from uuid import UUID
-from models.user import User
-from models.user import UserSigninModel
-from models.user import UserSignupModel
-from models.user import UserUpdateRequest
+from models.user import *
 from re import match
 from utils.functions import encrypt
 
