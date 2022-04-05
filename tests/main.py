@@ -28,7 +28,6 @@ def main():
 	signin_result = post("http://localhost:8000/users/signin", 
 					json_encode(signin_data))
 
-	
 	print("Signup")
 	print(signup_result)
 	signup_result = json_decode(signup_result.text)

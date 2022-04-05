@@ -5,8 +5,6 @@ app = FastAPI()
 
 app.include_router(user)
 
-# app.add_route("/user", user)
-
 @app.get("/")
 async def root():
 	return {

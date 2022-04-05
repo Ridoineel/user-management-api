@@ -15,7 +15,6 @@ class Role(str, Enum):
 	user = "user"
  
 class User(BaseModel):
-	id: Optional[UUID]
 	first_name: str
 	last_name: str
 	username: str
@@ -23,14 +22,8 @@ class User(BaseModel):
 	gender: Gender
 	roles: Optional[List[Role]] = [Role.user]
 
-	def __init__(self, **params):
-		params["id"] = uuid4()
-
-		super().__init__(**params)
-
 	def __getitem__(self, item):
 		obj = {
-			"id": self.id,
 			"first_name": self.first_name,
 			"last_name": self.last_name,
 			"gender": self.gender,

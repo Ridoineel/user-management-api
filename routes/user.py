@@ -1,73 +1,72 @@
 from fastapi import APIRouter
 from fastapi import HTTPException
 from typing import List
+from re import match
 from uuid import uuid4
 from uuid import UUID
+from bson.objectid import ObjectId
 from models.user import *
-from re import match
 from utils.functions import encrypt
+from configs.db import con
+from schemas.user import userEntity
+from schemas.user import parseMgEntity
+
 
 user = APIRouter()
 
-db: List[User] = [
-	User(
-		first_name="Jamila",
-		last_name="Ahmed",
-		username="ah12",
-		password="kjdfkje",
-		gender=Gender.female,
-		roles=[Role.user]
-	),
-	User(
-		first_name="Ridoine",
-		last_name="OURO",
-		username="ouro454",
-		password="5587455",
-		gender=Gender.male,
-		roles=[Role.admin, Role.user]
-	),
-	User(
-		first_name="Grâce",
-		last_name="BOHN",
-		username="boh545",
-		password="8879455",
-		gender=Gender.female,
-		roles=[Role.user]
-	),
-]
+# db: List[User] = [
+# 	User(
+# 		first_name="Jamila",
+# 		last_name="Ahmed",
+# 		username="ah12",
+# 		password="kjdfkje",
+# 		gender=Gender.female,
+# 		roles=[Role.user]
+# 	),
+# 	User(
+# 		first_name="Ridoine",
+# 		last_name="OURO",
+# 		username="ouro454",
+# 		password="5587455",
+# 		gender=Gender.male,
+# 		roles=[Role.admin, Role.user]
+# 	),
+# 	User(
+# 		first_name="Grâce",
+# 		last_name="BOHN",
+# 		username="boh545",
+# 		password="8879455",
+# 		gender=Gender.female,
+# 		roles=[Role.user]
+# 	),
+# ]
 
 def usernameExist(username: str):
 	""" Check if the user exist
 
 	"""
 
-	for user in db:
-		if user.username == username:
-			return True
-
-	return False
-
-def userExist(user: User):
-	if not usernameExist(user.username):
-		return False
-
-	for u in db:
-		if u.username == user.username and u.password == user.password:
-			return True
+	user = con.local.user.find_one({"username": username})
+	
+	if user:
+		return True
 
 	return False
 
 
 @user.get("/users")
 async def fetch_users():
-	return db
+	return list(map(parseMgEntity, con.local.user.find()))
 
 @user.get("/users/{_id}")
-async def get_user(_id: UUID):
-	for user in db:
-		if user.id == _id:
-			return user
+async def get_user(_id):
+	user = con.local.user.find_one({"_id": ObjectId(_id)})
 
+	if user:
+		user["id"] = str(user["_id"])
+		del user["_id"]
+
+		return user
 
 	# user not exist
 	raise HTTPException(
@@ -159,9 +158,12 @@ async def signup(user: UserSignupModel):
 	# All is done
 
 	# add user to db
-	db.append(user)
+	con.local.user.insert_one(userEntity(user))
 
-	return {"id": db[-1].id}
+	_id = con.local.user.find_one({"username": username})["_id"]
+
+
+	return {"id": str(_id)}
 
 @user.post("/users/signin")
 async def signin(user: UserSigninModel):
@@ -172,13 +174,13 @@ async def signin(user: UserSigninModel):
 	username = user.username.strip().lower()
 	password = encrypt(user.password)
 
-	for u in db:
-		if (u.username == username) and (u.password == password):
-			# user exist
+	user = con.local.user.find_one({
+			"username": username, 
+			"password": password
+		})
 
-			return {
-				"id": u.id,
-			}
+	if user:
+		return {"id": str(user["_id"])}
 
 	# if user not exist
 	raise HTTPException(
@@ -190,21 +192,22 @@ async def signin(user: UserSigninModel):
 
 
 @user.put("/users/{user_id}")
-async def update_user(data: UserUpdateRequest, user_id: UUID):
-	for user in db:
-		if user.id == user_id:
-			for field, value in data:
-				if field is not None:
-					# field is string
-					# so it's impossible to do
-					# user.field = value
-					# but with exec function, 
-					# it's possible
-					exec(f"user.{field} = value")
+async def update_user(data: UserUpdateRequest, user_id):
+	
 
-			return {
-				"status": 200
-			}
+	print(type(data))
+	print(list(user_id))
+	exit()
+
+	user = con.local.user.find_one({"_id": ObjectId(user_id)})
+
+	if user:
+		con.local.user.update_one({"_id": ObjectId(dict(user_id))}, 
+								{"$set": data})
+	
+		return {
+			"status": 200
+		}
 
 	raise HTTPException(
 			status_code=404,
@@ -212,18 +215,18 @@ async def update_user(data: UserUpdateRequest, user_id: UUID):
 		)
 
 @user.delete("/users/{user_id}")
-async def delete_user(user_id: UUID):
+async def delete_user(user_id):
 
-	for user in db:
-		if user.id == user_id:
-			# delete user
-			db.remove(user)
+	res = con.local.user.delete_one({"_id": ObjectId(user_id)})
 
-			return {
+	if res.deleted_count == 1:
+		# success deletion
+
+		return {
 				"status": 200
 			}
 
 	raise HTTPException(
 			status_code=404,
-			detail=f"user with id: {_id} does not exist"
+			detail=f"user with id: {user_id} does not exist"
 		)
