@@ -14,33 +14,6 @@ from schemas.user import parseMgEntity
 
 user = APIRouter()
 
-# db: List[User] = [
-# 	User(
-# 		first_name="Jamila",
-# 		last_name="Ahmed",
-# 		username="ah12",
-# 		password="kjdfkje",
-# 		gender=Gender.female,
-# 		roles=[Role.user]
-# 	),
-# 	User(
-# 		first_name="Ridoine",
-# 		last_name="OURO",
-# 		username="ouro454",
-# 		password="5587455",
-# 		gender=Gender.male,
-# 		roles=[Role.admin, Role.user]
-# 	),
-# 	User(
-# 		first_name="Grâce",
-# 		last_name="BOHN",
-# 		username="boh545",
-# 		password="8879455",
-# 		gender=Gender.female,
-# 		roles=[Role.user]
-# 	),
-# ]
-
 def usernameExist(username: str):
 	""" Check if the user exist
 
@@ -193,17 +166,12 @@ async def signin(user: UserSigninModel):
 
 @user.put("/users/{user_id}")
 async def update_user(data: UserUpdateRequest, user_id):
-	
-
-	print(type(data))
-	print(list(user_id))
-	exit()
 
 	user = con.local.user.find_one({"_id": ObjectId(user_id)})
 
 	if user:
-		con.local.user.update_one({"_id": ObjectId(dict(user_id))}, 
-								{"$set": data})
+		con.local.user.update_one({"_id": ObjectId(user_id)}, 
+								  {"$set": dict(data)})
 	
 		return {
 			"status": 200
