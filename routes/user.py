@@ -15,7 +15,7 @@ from schemas.user import parseMgEntity
 user = APIRouter()
 
 def usernameExist(username: str):
-	""" Check if the user exist
+	""" Check if the user (username) exist
 
 	"""
 
