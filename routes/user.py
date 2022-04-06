@@ -7,7 +7,7 @@ from uuid import UUID
 from bson.objectid import ObjectId
 from models.user import *
 from utils.functions import encrypt
-from configs.db import con
+from configs.db import db
 from schemas.user import userEntity
 from schemas.user import parseMgEntity
 
@@ -19,7 +19,7 @@ def usernameExist(username: str):
 
 	"""
 
-	user = con.local.user.find_one({"username": username})
+	user = db.user.find_one({"username": username})
 	
 	if user:
 		return True
@@ -29,11 +29,11 @@ def usernameExist(username: str):
 
 @user.get("/users")
 async def fetch_users():
-	return list(map(parseMgEntity, con.local.user.find()))
+	return list(map(parseMgEntity, db.user.find()))
 
 @user.get("/users/{_id}")
 async def get_user(_id):
-	user = con.local.user.find_one({"_id": ObjectId(_id)})
+	user = db.user.find_one({"_id": ObjectId(_id)})
 
 	if user:
 		user["id"] = str(user["_id"])
@@ -131,9 +131,9 @@ async def signup(user: UserSignupModel):
 	# All is done
 
 	# add user to db
-	con.local.user.insert_one(userEntity(user))
+	db.user.insert_one(userEntity(user))
 
-	_id = con.local.user.find_one({"username": username})["_id"]
+	_id = db.user.find_one({"username": username})["_id"]
 
 
 	return {"id": str(_id)}
@@ -147,7 +147,7 @@ async def signin(user: UserSigninModel):
 	username = user.username.strip().lower()
 	password = encrypt(user.password)
 
-	user = con.local.user.find_one({
+	user = db.user.find_one({
 			"username": username, 
 			"password": password
 		})
@@ -167,10 +167,10 @@ async def signin(user: UserSigninModel):
 @user.put("/users/{user_id}")
 async def update_user(data: UserUpdateRequest, user_id):
 
-	user = con.local.user.find_one({"_id": ObjectId(user_id)})
+	user = db.user.find_one({"_id": ObjectId(user_id)})
 
 	if user:
-		con.local.user.update_one({"_id": ObjectId(user_id)}, 
+		db.user.update_one({"_id": ObjectId(user_id)}, 
 								  {"$set": dict(data)})
 	
 		return {
@@ -185,7 +185,7 @@ async def update_user(data: UserUpdateRequest, user_id):
 @user.delete("/users/{user_id}")
 async def delete_user(user_id):
 
-	res = con.local.user.delete_one({"_id": ObjectId(user_id)})
+	res = db.user.delete_one({"_id": ObjectId(user_id)})
 
 	if res.deleted_count == 1:
 		# success deletion
