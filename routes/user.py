@@ -4,6 +4,7 @@ from typing import List
 from re import match
 from uuid import uuid4
 from uuid import UUID
+# import jwt
 from bson.objectid import ObjectId
 from models.user import *
 from utils.functions import encrypt
@@ -12,7 +13,7 @@ from schemas.user import userEntity
 from schemas.user import parseMgEntity
 
 
-user = APIRouter()
+user = APIRouter(prefix="/users")
 
 def usernameExist(username: str):
 	""" Check if the user (username) exist
@@ -27,13 +28,13 @@ def usernameExist(username: str):
 	return False
 
 
-@user.get("/users")
+@user.get("/")
 async def fetch_users():
 	return list(map(parseMgEntity, db.user.find()))
 
-@user.get("/users/{_id}")
+@user.get("/{user_id}")
 async def get_user(_id):
-	user = db.user.find_one({"_id": ObjectId(_id)})
+	user = db.user.find_one({"_id": ObjectId(user_id)})
 
 	if user:
 		user["id"] = str(user["_id"])
@@ -50,7 +51,7 @@ async def get_user(_id):
 			
 		)
 
-@user.post("/users/signup")
+@user.post("/signup")
 async def signup(user: UserSignupModel):
 	""" register user
 
@@ -138,7 +139,7 @@ async def signup(user: UserSignupModel):
 
 	return {"id": str(_id)}
 
-@user.post("/users/signin")
+@user.post("/signin")
 async def signin(user: UserSigninModel):
 	""" user authentification 
 
@@ -153,7 +154,15 @@ async def signin(user: UserSigninModel):
 		})
 
 	if user:
-		return {"id": str(user["_id"])}
+		user_id = str(user["_id"])
+		return {
+				"id": user_id,
+				# "token": jwt.encode(
+				# 		{"user_id": user_id},
+				# 		"secret",
+				# 		algorithm="HS256"
+				# 	)
+			}
 
 	# if user not exist
 	raise HTTPException(
@@ -164,7 +173,7 @@ async def signin(user: UserSigninModel):
 			)
 
 
-@user.put("/users/{user_id}")
+@user.put("/{user_id}")
 async def update_user(data: UserUpdateRequest, user_id):
 
 	user = db.user.find_one({"_id": ObjectId(user_id)})
@@ -182,7 +191,7 @@ async def update_user(data: UserUpdateRequest, user_id):
 			detail=f"user with id: {user_id} does not exist"
 		)
 
-@user.delete("/users/{user_id}")
+@user.delete("/{user_id}")
 async def delete_user(user_id):
 
 	res = db.user.delete_one({"_id": ObjectId(user_id)})
