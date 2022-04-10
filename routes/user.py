@@ -4,14 +4,17 @@ from typing import List
 from re import match
 from uuid import uuid4
 from uuid import UUID
-# import jwt
+import jwt
 from bson.objectid import ObjectId
 from models.user import *
 from utils.functions import encrypt
 from configs.db import db
 from schemas.user import userEntity
 from schemas.user import parseMgEntity
+from dotenv import dotenv_values
 
+ # get token secret
+TOKEN_SECRET = dotenv_values().get("TOKEN_SECRET")
 
 user = APIRouter(prefix="/users")
 
@@ -157,11 +160,11 @@ async def signin(user: UserSigninModel):
 		user_id = str(user["_id"])
 		return {
 				"id": user_id,
-				# "token": jwt.encode(
-				# 		{"user_id": user_id},
-				# 		"secret",
-				# 		algorithm="HS256"
-				# 	)
+				"token": jwt.encode(
+						{"user_id": user_id},
+						TOKEN_SECRET,
+						algorithm="HS256"
+					)
 			}
 
 	# if user not exist
@@ -175,6 +178,9 @@ async def signin(user: UserSigninModel):
 
 @user.put("/{user_id}")
 async def update_user(data: UserUpdateRequest, password, user_id):
+	""" update user data 
+		
+	"""
 
 	user = db.user.find_one({
 		"_id": ObjectId(user_id), 

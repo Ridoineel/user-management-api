@@ -1,4 +1,4 @@
 fastapi
-uvicorn
-pydantic
-jwt
+uvicorn[standard]
+pyjwt
+python-dotenv
