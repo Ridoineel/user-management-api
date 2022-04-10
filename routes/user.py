@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from fastapi import HTTPException
+from fastapi import Header
 from typing import List
 from re import match
 from uuid import uuid4
@@ -11,6 +12,7 @@ from utils.functions import encrypt
 from configs.db import db
 from schemas.user import userEntity
 from schemas.user import parseMgEntity
+from middlewares.auth import auth
 from dotenv import dotenv_values
 
  # get token secret
@@ -177,17 +179,15 @@ async def signin(user: UserSigninModel):
 
 
 @user.put("/{user_id}")
-async def update_user(data: UserUpdateRequest, password, user_id):
-	""" update user data 
+async def update_user(data: UserUpdateRequest, user_id, authorization: Optional[str] = Header(None)):
+	""" update user data
+		user_id: in path
+		data: request body
+		autorization: in request header according to "baerer <token>"
 		
 	"""
 
-	user = db.user.find_one({
-		"_id": ObjectId(user_id), 
-		"password": encrypt(password)
-	})
-
-	if user:
+	if auth(user_id, authorization):
 		user = db.user.find_one({"_id": ObjectId(user_id)})
 
 		if user:
@@ -205,18 +205,20 @@ async def update_user(data: UserUpdateRequest, password, user_id):
 
 	raise HTTPException(
 				status_code=404,
-				detail=f"not found user id or incorrect password"
+				detail=f"access unauthorized"
 			)
 
+
+
 @user.delete("/{user_id}")
-async def delete_user(user_id, password):
+async def delete_user(user_id, authorization: Optional[str] = Header(None)):
+	""" delete user: by user
+		user_id: in path
+		autorization: in request header according to "baerer <token>"
+		
+	"""
 
-	user = db.user.find_one({
-		"_id": ObjectId(user_id), 
-		"password": encrypt(password)
-	})
-
-	if user:
+	if auth(user_id, authorization) or "admin" in user_roles:
 		res = db.user.delete_one({"_id": ObjectId(user_id)})
 
 		if res.deleted_count == 1:
@@ -233,5 +235,5 @@ async def delete_user(user_id, password):
 
 	raise HTTPException(
 				status_code=404,
-				detail=f"not found user id or incorrect password"
+				detail=f"access unauthorized"
 			)
