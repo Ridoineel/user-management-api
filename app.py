@@ -1,10 +1,19 @@
 from fastapi import FastAPI
 from fastapi import Request
 from fastapi import HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from routes.user import *
 from middlewares.auth import auth
 
 app = FastAPI()
+
+app.add_middleware (
+	CORSMiddleware,
+	allow_origins=["*"],
+	allow_methods=["*"],
+	allow_credentials=True,
+	allow_headers=["*"]
+)
 
 app.include_router(user)
 
