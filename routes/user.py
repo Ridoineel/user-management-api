@@ -33,7 +33,7 @@ async def fetch_users():
 	return list(map(parseMgEntity, db.user.find()))
 
 @user.get("/{user_id}")
-async def get_user(_id):
+async def get_user(user_id):
 	user = db.user.find_one({"_id": ObjectId(user_id)})
 
 	if user:
@@ -174,36 +174,58 @@ async def signin(user: UserSigninModel):
 
 
 @user.put("/{user_id}")
-async def update_user(data: UserUpdateRequest, user_id):
+async def update_user(data: UserUpdateRequest, password, user_id):
 
-	user = db.user.find_one({"_id": ObjectId(user_id)})
+	user = db.user.find_one({
+		"_id": ObjectId(user_id), 
+		"password": encrypt(password)
+	})
 
 	if user:
-		db.user.update_one({"_id": ObjectId(user_id)}, 
-								  {"$set": dict(data)})
-	
-		return {
-			"status": 200
-		}
+		user = db.user.find_one({"_id": ObjectId(user_id)})
 
-	raise HTTPException(
-			status_code=404,
-			detail=f"user with id: {user_id} does not exist"
-		)
-
-@user.delete("/{user_id}")
-async def delete_user(user_id):
-
-	res = db.user.delete_one({"_id": ObjectId(user_id)})
-
-	if res.deleted_count == 1:
-		# success deletion
-
-		return {
+		if user:
+			db.user.update_one({"_id": ObjectId(user_id)}, 
+									  {"$set": dict(data)})
+		
+			return {
 				"status": 200
 			}
 
+		raise HTTPException(
+				status_code=404,
+				detail=f"user with id: {user_id} does not exist"
+			)
+
 	raise HTTPException(
-			status_code=404,
-			detail=f"user with id: {user_id} does not exist"
-		)
+				status_code=404,
+				detail=f"not found user id or incorrect password"
+			)
+
+@user.delete("/{user_id}")
+async def delete_user(user_id, password):
+
+	user = db.user.find_one({
+		"_id": ObjectId(user_id), 
+		"password": encrypt(password)
+	})
+
+	if user:
+		res = db.user.delete_one({"_id": ObjectId(user_id)})
+
+		if res.deleted_count == 1:
+			# success deletion
+
+			return {
+					"status": 200
+				}
+
+		raise HTTPException(
+				status_code=404,
+				detail=f"user with id: {user_id} does not exist"
+			)
+
+	raise HTTPException(
+				status_code=404,
+				detail=f"not found user id or incorrect password"
+			)
