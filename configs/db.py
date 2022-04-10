@@ -1,8 +1,10 @@
 from pymongo import MongoClient
 
+# put your mongodb uri here
+# con = MongoClient(DB_URI)
+
+# if u wanna to use local
 con = MongoClient()
 
+# by default
 db = con.local
-
-# print(db.user.insert_one({"ne": "rioine"}))
-print(list(db.user.find()))
