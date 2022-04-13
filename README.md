@@ -1,5 +1,5 @@
 # User management API
-> make with FastAPI (python) and MongoDB
+> made with FastAPI (python) and MongoDB
 
 ## Clone and install dependencies
 ```bash
